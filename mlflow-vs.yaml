@@ -1,0 +1,23 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  annotations:
+  labels:
+    app: llm
+  name: mlflow-vs
+  namespace: mlflow
+spec:
+  gateways:
+  - istio-system/http-gateway
+  hosts:
+  - a696f4a126992482880146caf998be46-1631032727.eu-central-1.elb.amazonaws.com
+  http:
+  - match:
+    - uri:
+        prefix: /mlflow
+    route:
+    - destination:
+        host: mlflow
+        port:
+          number: 80
+    timeout: 200s

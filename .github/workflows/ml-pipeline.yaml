@@ -1,0 +1,48 @@
+name: ML Training Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/train.py'        # only triggers when train.py changes
+  workflow_dispatch:              # allows manual trigger from GitHub UI
+
+env:
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+  MODEL_NAME: "my-classifier"
+  EXPERIMENT_NAME: "my-first-experiment"
+  ACCURACY_THRESHOLD: "0.85"
+  AWS_DEFAULT_REGION: "eu-central-1"
+
+# .github/workflows/ml-pipeline.yaml
+
+jobs:
+  train-and-promote:
+    runs-on: self-hosted  # ← only change needed!
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── NO AWS credentials step needed ──
+      # ── Runner pod has IAM role via IRSA ──
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run training
+        env:
+          MLFLOW_TRACKING_URI: "http://mlflow.mlflow.svc.cluster.local:5000"
+        run: python scripts/train.py
+
+      - name: Run validation gate
+        env:
+          MLFLOW_TRACKING_URI: "http://mlflow.mlflow.svc.cluster.local:5000"
+          MODEL_NAME: "my-classifier"
+          ACCURACY_THRESHOLD: "0.85"
+        run: python scripts/validation_gate.py

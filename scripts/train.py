@@ -5,43 +5,39 @@ from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import os
+
 # ── 1. Point to YOUR MLflow server ──────────────────────────────
 MLFLOW_URL = os.environ["MLFLOW_TRACKING_URI"]
 MODEL_NAME = os.environ.get("MODEL_NAME", "my-classifier")
 EXPERIMENT_NAME = os.environ.get("EXPERIMENT_NAME", "my-first-experiment")
-ACCURACY_THRESHOLD = float(os.environ.get("ACCURACY_THRESHOLD", "0.85"))
 
 mlflow.set_tracking_uri(MLFLOW_URL)
 
-# ── 2. Experiments = folders that group related runs ────────────
-#    Think: one experiment per project/model type
-mlflow.set_experiment("my-first-experiment")
+# ── 2. Set experiment ────────────────────────────────────────────
+mlflow.set_experiment(EXPERIMENT_NAME)
 
-# ── 3. A "run" = one training attempt with its own params/metrics
+# ── 3. Start run ─────────────────────────────────────────────────
 with mlflow.start_run(run_name="baseline-run"):
 
-    # Fake dataset — ignore the ML, focus on the MLflow calls
-# Update train.py — replace the config section with this:
+    # Dataset
+    X, y = make_classification(
+        n_samples=5000,
+        n_features=10,
+        random_state=42,
+        n_informative=8,
+        n_redundant=2
+    )
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=0.2,
+        random_state=42
+    )
 
- X, y = make_classification(
-    n_samples=5000,
-    n_features=10,
-    random_state=42,
-    n_informative=8,    # ← more informative features = better accuracy
-    n_redundant=2
- )
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y,
-    test_size=0.2,
-    random_state=42     # ← fix random state for reproducibility
-)
+    # Hyperparameters
+    C = 5.0
+    max_iter = 500
 
-C = 5.0                 # ← we know C=1.0 was best before, go higher
-max_iter = 500          # ← more iterations = better convergence
-
-model = LogisticRegression(C=C, max_iter=max_iter)
-
-    # ── 4. LOG PARAMS — things you set before training ──────────
+    # ── 4. LOG PARAMS ────────────────────────────────────────────
     mlflow.log_param("C", C)
     mlflow.log_param("max_iter", max_iter)
     mlflow.log_param("model_type", "LogisticRegression")
@@ -50,15 +46,15 @@ model = LogisticRegression(C=C, max_iter=max_iter)
     model = LogisticRegression(C=C, max_iter=max_iter)
     model.fit(X_train, y_train)
 
-    # ── 5. LOG METRICS — results after training ─────────────────
+    # ── 5. LOG METRICS ───────────────────────────────────────────
     accuracy = accuracy_score(y_test, model.predict(X_test))
     mlflow.log_metric("accuracy", accuracy)
 
-    # ── 6. LOG MODEL — saves to S3 automatically ────────────────
+    # ── 6. LOG MODEL ─────────────────────────────────────────────
     mlflow.sklearn.log_model(
         sk_model=model,
-        artifact_path="model",           # folder name inside S3
-        registered_model_name="my-classifier"  # registers in Model Registry
+        artifact_path="model",
+        registered_model_name="my-classifier"
     )
 
     print(f"Run complete. Accuracy: {accuracy:.4f}")

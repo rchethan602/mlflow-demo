@@ -21,11 +21,16 @@ mlflow.set_experiment("my-first-experiment")
 with mlflow.start_run(run_name="baseline-run"):
 
     # Fake dataset — ignore the ML, focus on the MLflow calls
-    X, y = make_classification(n_samples=1000, n_features=10)
+    X, y = make_classification(
+    n_samples=5000,      # more data = better accuracy
+    n_features=10,
+    random_state=42
+)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
+
     # Hyperparameters you want to track
-    C = 0.1
+    C = 1.0
     max_iter = 100
 
     # ── 4. LOG PARAMS — things you set before training ──────────

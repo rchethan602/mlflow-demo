@@ -21,17 +21,25 @@ mlflow.set_experiment("my-first-experiment")
 with mlflow.start_run(run_name="baseline-run"):
 
     # Fake dataset — ignore the ML, focus on the MLflow calls
-    X, y = make_classification(
-    n_samples=5000,      # more data = better accuracy
+# Update train.py — replace the config section with this:
+
+ X, y = make_classification(
+    n_samples=5000,
     n_features=10,
-    random_state=42
+    random_state=42,
+    n_informative=8,    # ← more informative features = better accuracy
+    n_redundant=2
+ )
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42     # ← fix random state for reproducibility
 )
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
+C = 5.0                 # ← we know C=1.0 was best before, go higher
+max_iter = 500          # ← more iterations = better convergence
 
-    # Hyperparameters you want to track
-    C = 1.0
-    max_iter = 100
+model = LogisticRegression(C=C, max_iter=max_iter)
 
     # ── 4. LOG PARAMS — things you set before training ──────────
     mlflow.log_param("C", C)

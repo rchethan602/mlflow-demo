@@ -18,7 +18,7 @@ env:
 
 jobs:
   train-and-promote:
-    runs-on: self-hosted  # ← only change needed!
+    runs-on:  mlflow-runner  # ← only change needed!
 
     steps:
       - name: Checkout code

@@ -4,8 +4,14 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+import os
 
-MLFLOW_URL = "http://localhost:5000"
+MLFLOW_URL = os.environ["MLFLOW_TRACKING_URI"]
+MODEL_NAME = os.environ.get("MODEL_NAME", "my-classifier")
+EXPERIMENT_NAME = os.environ.get("EXPERIMENT_NAME", "my-first-experiment")
+ACCURACY_THRESHOLD = float(os.environ.get("ACCURACY_THRESHOLD", "0.85"))
+
+mlflow.set_tracking_uri(MLFLOW_URL)
 mlflow.set_tracking_uri(MLFLOW_URL)
 
 client = MlflowClient()  # ← this is your programmatic control panel
